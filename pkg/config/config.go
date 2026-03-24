@@ -13,6 +13,7 @@ type Config struct {
 	Database DatabaseConfig
 	Redis RedisConfig
 	Kafka KafkaConfig
+	LogLevel string
 }
 
 // ServerConfig holds HTTP server settings
@@ -65,6 +66,7 @@ func Load() *Config{
 		Kafka: KafkaConfig{
 			Brokers: os.Getenv("KAFKA_BROKERS"),
 		},
+		LogLevel: os.Getenv("LOG_LEVEL"),
 	}
 }
 

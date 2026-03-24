@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -11,22 +10,22 @@ import (
 
 	"github.com/GulzhanKarakul/payment-service/pkg/config"
 	"github.com/GulzhanKarakul/payment-service/pkg/database"
+	"github.com/GulzhanKarakul/payment-service/pkg/logger"
 )
 
 func main() {
-	// Srtuctured logger
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	logger.Info("starting payment-service...")
 	cfg := config.Load()
+	log := logger.New(cfg.LogLevel)
+	log.Info("starting payment-service...")
 
 	// connect to database
 	db, err := database.NewPostgres(database.DefaultConfig(cfg.DSN()))
 	if err != nil{
-		logger.Error("failed to connect to database", "error", err)
+		log.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
 	defer db.Close()
-	logger.Info("connected to database")
+	log.Info("connected to database")
 
 	// Http server with timeout
 	srv := &http.Server{
@@ -36,11 +35,11 @@ func main() {
 		WriteTimeout: 15 * time.Second, // response timeout
 		IdleTimeout: 60 * time.Second, // keep-alive timeout
 	}
-	logger.Info("server started", "port", cfg.Server.Port)
+	log.Info("server started", "port", cfg.Server.Port)
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logger.Error("server failed", "error", err)
+			log.Error("server failed", "error", err)
 			os.Exit(1)
 		}
 	}()
@@ -50,14 +49,14 @@ func main() {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	logger.Info("server shutting down...")
+	log.Info("server shutting down...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	if err := srv.Shutdown(ctx); err != nil {
-		logger.Error("forced shutdown", "error", err)
+		log.Error("forced shutdown", "error", err)
 	}
 
-	logger.Info("server stopped")
+	log.Info("server stopped")
 }
