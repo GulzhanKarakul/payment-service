@@ -40,7 +40,7 @@ func (r *postgresBusinessRepo) Create(
 
 func (r *postgresBusinessRepo) GetByID(
 	ctx context.Context,
-	businessId string,
+	id string,
 )(domain.Business, error) {
 	var b domain.Business
 	err := r.db.QueryRowContext(
@@ -48,7 +48,7 @@ func (r *postgresBusinessRepo) GetByID(
 		`SELECT id, name, owner_phone, bonus_balance, is_active, created_at, updated_at
 		FROM businesses
 		WHERE id=$1`,
-		businessId,
+		id,
 	).Scan(
 		&b.ID, &b.Name, &b.OwnerPhone, &b.BonusBalance, &b.IsActive, &b.CreatedAt, &b.UpdatedAt,
 	)
@@ -64,8 +64,8 @@ func (r *postgresBusinessRepo) GetByID(
 
 func (r *postgresBusinessRepo) UpdateBonusBalance(
 	ctx context.Context,
-	businessId string,
-	bonus int64,
+	id string,
+	delta int64,
 ) (domain.Business, error) {
 	var b domain.Business
 	err := r.db.QueryRowContext(
@@ -75,7 +75,7 @@ func (r *postgresBusinessRepo) UpdateBonusBalance(
 			updated_at = NOW()
 		WHERE id=$2
 		RETURNING id, name, owner_phone, bonus_balance, is_active, created_at, updated_at`,
-		bonus, businessId,
+		delta, id,
 	).Scan(
 		&b.ID, &b.Name, &b.OwnerPhone, &b.BonusBalance, &b.IsActive, &b.CreatedAt, &b.UpdatedAt,
 	)

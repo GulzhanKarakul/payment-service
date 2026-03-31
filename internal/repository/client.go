@@ -40,7 +40,7 @@ func (r *postgresClientRepo) Create(
 
 func (r *postgresClientRepo) GetByID(
 	ctx context.Context, 
-	clientId string,
+	id string,
 	)(domain.Client, error) {
 	var c domain.Client
 	err := r.db.QueryRowContext(
@@ -48,7 +48,7 @@ func (r *postgresClientRepo) GetByID(
 		`SELECT id, phone, name, bonus_balance, is_active, created_at, updated_at
 		FROM clients
 		WHERE id=$1`,
-		clientId,
+		id,
 	).Scan(
 		&c.ID, &c.Phone, &c.Name, &c.BonusBalance, &c.IsActive, &c.CreatedAt, &c.UpdatedAt,
 	)
@@ -88,7 +88,7 @@ func (r *postgresClientRepo) GetByPhone(
 
 func (r *postgresClientRepo) UpdateBonusBalance(
 	ctx context.Context,
-	clientId string,
+	id string,
 	bonus int64,
 )(domain.Client, error) {
 	var c domain.Client
@@ -99,7 +99,7 @@ func (r *postgresClientRepo) UpdateBonusBalance(
 			updated_at = NOW()
 		WHERE id=$2
 		RETURNING id, phone, name, bonus_balance, is_active, created_at, updated_at`,
-		bonus, clientId,
+		bonus, id,
 	).Scan(
 		&c.ID, &c.Phone, &c.Name, &c.BonusBalance, &c.IsActive, &c.CreatedAt, &c.UpdatedAt,
 	)
