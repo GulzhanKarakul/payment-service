@@ -44,7 +44,7 @@ func (r *postgresBonusSettingsRepo) Upsert(
 	return bs, nil
 }
 
-func (r *postgresBonusSettingsRepo) GetByID(
+func (r *postgresBonusSettingsRepo) GetByBusinessID(
 	ctx context.Context,
 	businessId string,
 ) (domain.BonusSettings, error) {

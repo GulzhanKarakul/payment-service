@@ -102,7 +102,7 @@ func (r *postgresTransactionRepo) CreateWithBonus(
 
 func (r *postgresTransactionRepo) GetByID(
 	ctx context.Context,
-	txId string,
+	id string,
 ) (domain.Transaction, error) {
 	var t domain.Transaction
 	err := r.db.QueryRowContext(
@@ -113,7 +113,7 @@ func (r *postgresTransactionRepo) GetByID(
 		FROM transactions
 		WHERE id = $1
 			AND deleted_at IS NULL`,
-			txId,
+			id,
 	).Scan(
 		&t.ID, &t.ClientID, &t.BusinessID, &t.Amount, &t.BonusAccrued,
 		&t.Currency, &t.Status, &t.Description, &t.CreatedAt, &t.UpdatedAt,
@@ -128,7 +128,7 @@ func (r *postgresTransactionRepo) GetByID(
 	return t, nil
 }
 
-func (r *postgresTransactionRepo) GetByClientId(
+func (r *postgresTransactionRepo) GetByClientID(
 	ctx context.Context,
 	clientId string,
 	limit, offset int,
@@ -182,13 +182,13 @@ func (r *postgresTransactionRepo) GetByClientId(
 
 func (r *postgresTransactionRepo) Cancel(
 	ctx context.Context,
-	txId string,
+	id string,
 ) error {
 	var status domain.TransactionStatus
 	err := r.db.QueryRowContext(ctx,
 			`SELECT status FROM transactions 
 			 WHERE id = $1 AND deleted_at IS NULL`,
-			txId,
+			id,
 	).Scan(&status)
 	if err != nil {
 			if errors.Is(err, sql.ErrNoRows) {
@@ -205,7 +205,7 @@ func (r *postgresTransactionRepo) Cancel(
 			`UPDATE transactions
 			 SET status = $1, deleted_at = NOW(), updated_at = NOW()
 			 WHERE id = $2`,
-			domain.StatusCancelled, txId,
+			domain.StatusCancelled, id,
 	)
 	if err != nil {
 			return fmt.Errorf("cancel transaction: %w", err)
