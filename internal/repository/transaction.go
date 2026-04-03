@@ -14,7 +14,7 @@ type postgresTransactionRepo struct {
 }
 
 func NewTransactionRepository(db *sql.DB) *postgresTransactionRepo {
-	return &postgresTransactionRepo{ db: db }
+	return &postgresTransactionRepo{db: db}
 }
 
 func (r *postgresTransactionRepo) CreateWithBonus(
@@ -39,7 +39,7 @@ func (r *postgresTransactionRepo) CreateWithBonus(
 		RETURNING 
 			id, client_id, business_id, amount, bonus_accrued,
 			currency, status, description, created_at, updated_at`,
-			clientId, businessId, amount, description,
+		clientId, businessId, amount, description,
 	).Scan(
 		&t.ID, &t.ClientID, &t.BusinessID, &t.Amount, &t.BonusAccrued,
 		&t.Currency, &t.Status, &t.Description, &t.CreatedAt, &t.UpdatedAt,
@@ -81,10 +81,10 @@ func (r *postgresTransactionRepo) CreateWithBonus(
 	}
 
 	_, err = tx.ExecContext(ctx,
-    `UPDATE transactions 
+		`UPDATE transactions 
 		SET status = $1, bonus_accrued = $2, updated_at = NOW() 
 		WHERE id = $3`,
-    domain.StatusCompleted, bonus, t.ID,
+		domain.StatusCompleted, bonus, t.ID,
 	)
 	if err != nil {
 		return domain.Transaction{}, fmt.Errorf("complete transaction: %w", err)
@@ -99,7 +99,6 @@ func (r *postgresTransactionRepo) CreateWithBonus(
 	return t, nil
 }
 
-
 func (r *postgresTransactionRepo) GetByID(
 	ctx context.Context,
 	id string,
@@ -113,7 +112,7 @@ func (r *postgresTransactionRepo) GetByID(
 		FROM transactions
 		WHERE id = $1
 			AND deleted_at IS NULL`,
-			id,
+		id,
 	).Scan(
 		&t.ID, &t.ClientID, &t.BusinessID, &t.Amount, &t.BonusAccrued,
 		&t.Currency, &t.Status, &t.Description, &t.CreatedAt, &t.UpdatedAt,
@@ -186,29 +185,29 @@ func (r *postgresTransactionRepo) Cancel(
 ) error {
 	var status domain.TransactionStatus
 	err := r.db.QueryRowContext(ctx,
-			`SELECT status FROM transactions 
+		`SELECT status FROM transactions 
 			 WHERE id = $1 AND deleted_at IS NULL`,
-			id,
+		id,
 	).Scan(&status)
 	if err != nil {
-			if errors.Is(err, sql.ErrNoRows) {
-					return domain.ErrTransactionNotFound
-			}
-			return fmt.Errorf("get transaction status: %w", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.ErrTransactionNotFound
+		}
+		return fmt.Errorf("get transaction status: %w", err)
 	}
 
 	if status == domain.StatusCancelled {
-			return domain.ErrTransactionCancelled
+		return domain.ErrTransactionCancelled
 	}
 
 	_, err = r.db.ExecContext(ctx,
-			`UPDATE transactions
+		`UPDATE transactions
 			 SET status = $1, deleted_at = NOW(), updated_at = NOW()
 			 WHERE id = $2`,
-			domain.StatusCancelled, id,
+		domain.StatusCancelled, id,
 	)
 	if err != nil {
-			return fmt.Errorf("cancel transaction: %w", err)
+		return fmt.Errorf("cancel transaction: %w", err)
 	}
 
 	return nil

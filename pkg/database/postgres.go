@@ -10,9 +10,9 @@ import (
 
 // Config holds Database connection settings
 type Config struct {
-	DSN string
-	MaxOpenConns int
-	MaxIdleConns int
+	DSN             string
+	MaxOpenConns    int
+	MaxIdleConns    int
 	ConnMaxLifetime time.Duration
 	ConnMaxIdleTime time.Duration
 }
@@ -20,9 +20,9 @@ type Config struct {
 // DefaultConfig returns sensible defaults for prod
 func DefaultConfig(dsn string) Config {
 	return Config{
-		DSN: dsn,
-		MaxOpenConns: 25,
-		MaxIdleConns: 5,
+		DSN:             dsn,
+		MaxOpenConns:    25,
+		MaxIdleConns:    5,
 		ConnMaxLifetime: 5 * time.Minute,
 		ConnMaxIdleTime: 30 * time.Minute,
 	}

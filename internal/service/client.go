@@ -11,14 +11,14 @@ import (
 
 type clientService struct {
 	repo ClientRepository
-	log *slog.Logger
+	log  *slog.Logger
 }
 
 func NewClientService(repo ClientRepository, log *slog.Logger) ClientService {
 	return &clientService{repo: repo, log: log}
 }
 
-func (s *clientService) Create(ctx context.Context, name, phone string) (domain.Client, error){
+func (s *clientService) Create(ctx context.Context, phone, name string) (domain.Client, error) {
 	_, err := s.repo.GetByPhone(ctx, phone)
 	if err == nil {
 		return domain.Client{}, domain.ErrClientAlreadyExist
@@ -27,11 +27,11 @@ func (s *clientService) Create(ctx context.Context, name, phone string) (domain.
 		return domain.Client{}, fmt.Errorf("clientService.Create: %w", err)
 	}
 
-	client, err := s.repo.Create(ctx, name, phone)
+	client, err := s.repo.Create(ctx, phone, name)
 	if err != nil {
 		return domain.Client{}, fmt.Errorf("clientService.Create: %w", err)
 	}
-	
+
 	return client, nil
 }
 

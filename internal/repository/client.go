@@ -7,6 +7,7 @@ import (
 	"fmt"
 
 	"github.com/GulzhanKarakul/payment-service/internal/domain"
+	"github.com/lib/pq"
 )
 
 type postgresClientRepo struct {
@@ -14,13 +15,13 @@ type postgresClientRepo struct {
 }
 
 func NewClientRepository(db *sql.DB) *postgresClientRepo {
-	return &postgresClientRepo{ db: db }
+	return &postgresClientRepo{db: db}
 }
 
 func (r *postgresClientRepo) Create(
-	ctx context.Context, 
+	ctx context.Context,
 	phone, name string,
-	)(domain.Client, error) {
+) (domain.Client, error) {
 	var c domain.Client
 	err := r.db.QueryRowContext(
 		ctx,
@@ -32,6 +33,10 @@ func (r *postgresClientRepo) Create(
 		&c.ID, &c.Phone, &c.Name, &c.BonusBalance, &c.IsActive, &c.CreatedAt, &c.UpdatedAt,
 	)
 	if err != nil {
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr) && pqErr.Code == "23505" {
+			return domain.Client{}, domain.ErrClientAlreadyExist
+		}
 		return domain.Client{}, fmt.Errorf("create client: %w", err)
 	}
 
@@ -39,9 +44,9 @@ func (r *postgresClientRepo) Create(
 }
 
 func (r *postgresClientRepo) GetByID(
-	ctx context.Context, 
+	ctx context.Context,
 	id string,
-	)(domain.Client, error) {
+) (domain.Client, error) {
 	var c domain.Client
 	err := r.db.QueryRowContext(
 		ctx,
@@ -65,7 +70,7 @@ func (r *postgresClientRepo) GetByID(
 func (r *postgresClientRepo) GetByPhone(
 	ctx context.Context,
 	phone string,
-)(domain.Client, error) {
+) (domain.Client, error) {
 	var c domain.Client
 	err := r.db.QueryRowContext(
 		ctx,
@@ -78,7 +83,7 @@ func (r *postgresClientRepo) GetByPhone(
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return domain.Client{}, domain.ErrClientNotFound 
+			return domain.Client{}, domain.ErrClientNotFound
 		}
 		return domain.Client{}, fmt.Errorf("get client by phone: %w", err)
 	}
@@ -90,7 +95,7 @@ func (r *postgresClientRepo) UpdateBonusBalance(
 	ctx context.Context,
 	id string,
 	bonus int64,
-)(domain.Client, error) {
+) (domain.Client, error) {
 	var c domain.Client
 	err := r.db.QueryRowContext(
 		ctx,
@@ -105,7 +110,7 @@ func (r *postgresClientRepo) UpdateBonusBalance(
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return domain.Client{}, domain.ErrClientNotFound 
+			return domain.Client{}, domain.ErrClientNotFound
 		}
 		return domain.Client{}, fmt.Errorf("update client bonus: %w", err)
 	}

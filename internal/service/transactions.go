@@ -10,11 +10,11 @@ import (
 )
 
 type transactionService struct {
-	txRepo TransactionRepository
+	txRepo     TransactionRepository
 	clientRepo ClientRepository
-	bizRepo BusinessRepository
-	bonusRepo BonusSettingsRepository
-	log *slog.Logger
+	bizRepo    BusinessRepository
+	bonusRepo  BonusSettingsRepository
+	log        *slog.Logger
 }
 
 func NewTransactionService(
@@ -25,11 +25,11 @@ func NewTransactionService(
 	log *slog.Logger,
 ) TransactionService {
 	return &transactionService{
-		txRepo: txRepo,
+		txRepo:     txRepo,
 		clientRepo: clientRepo,
-		bizRepo: bizRepo,
-		bonusRepo: bonusRepo,
-		log: log,
+		bizRepo:    bizRepo,
+		bonusRepo:  bonusRepo,
+		log:        log,
 	}
 }
 
@@ -46,7 +46,7 @@ func (s *transactionService) Create(
 	}
 
 	if !client.IsActive {
-    return domain.Transaction{}, domain.ErrClientIsNotActive
+		return domain.Transaction{}, domain.ErrClientIsNotActive
 	}
 
 	business, err := s.bizRepo.GetByID(ctx, businessID)
@@ -55,22 +55,22 @@ func (s *transactionService) Create(
 	}
 
 	if !business.IsActive {
-    return domain.Transaction{}, domain.ErrBusinessIsNotActive
+		return domain.Transaction{}, domain.ErrBusinessIsNotActive
 	}
 
 	bonusSettings, err := s.bonusRepo.GetByBusinessID(ctx, businessID)
 	if err != nil && !errors.Is(err, domain.ErrBonusSettingsNotFound) {
-			return domain.Transaction{}, fmt.Errorf("transactionService.Create: %w", err)
+		return domain.Transaction{}, fmt.Errorf("transactionService.Create: %w", err)
 	}
 
 	var bonusPercent float64
 	if err == nil && bonusSettings.IsActive {
-			bonusPercent = bonusSettings.BonusPercent
+		bonusPercent = bonusSettings.BonusPercent
 	}
 
 	tx, err := s.txRepo.CreateWithBonus(ctx, clientID, businessID, amount, bonusPercent, description)
 	if err != nil {
-		return domain.Transaction{}, fmt.Errorf("transactionService.Create: %w", err) 
+		return domain.Transaction{}, fmt.Errorf("transactionService.Create: %w", err)
 	}
 
 	return tx, nil
@@ -102,7 +102,7 @@ func (s *transactionService) GetByClientID(ctx context.Context, clientID string,
 }
 
 func (s *transactionService) Cancel(ctx context.Context, id string) error {
-	if err := s.txRepo.Cancel(ctx, id); err != nil{
+	if err := s.txRepo.Cancel(ctx, id); err != nil {
 		return fmt.Errorf("transactionService.Cancel: %w", err)
 	}
 	return nil

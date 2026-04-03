@@ -8,6 +8,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/GulzhanKarakul/payment-service/internal/handler"
+	"github.com/GulzhanKarakul/payment-service/internal/middleware"
+	"github.com/GulzhanKarakul/payment-service/internal/repository"
+	"github.com/GulzhanKarakul/payment-service/internal/service"
 	"github.com/GulzhanKarakul/payment-service/pkg/config"
 	"github.com/GulzhanKarakul/payment-service/pkg/database"
 	"github.com/GulzhanKarakul/payment-service/pkg/logger"
@@ -20,20 +24,43 @@ func main() {
 
 	// connect to database
 	db, err := database.NewPostgres(database.DefaultConfig(cfg.DSN()))
-	if err != nil{
+	if err != nil {
 		log.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
 	defer db.Close()
 	log.Info("connected to database")
 
+	// 	1. Создать все репозитории (4 штуки)
+	// 2. Создать все сервисы (4 штуки)
+	// 3. Создать handler
+	// 4. Подключить middleware к роутеру
+	// 5. Передать h.Routes() в http.Server вместо nil
+
+	// server repositories
+	clientRepo := repository.NewClientRepository(db)
+	businessRepo := repository.NewBusinessRepository(db)
+	bonusRepo := repository.NewBonusSettingsRepository(db)
+	txRepo := repository.NewTransactionRepository(db)
+
+	// server services
+	clientSvc := service.NewClientService(clientRepo, log)
+	businessSvc := service.NewBusinessService(businessRepo, log)
+	bonusSvc := service.NewBonusSettingsService(bonusRepo, businessRepo, log)
+	txSvc := service.NewTransactionService(txRepo, clientRepo, businessRepo, bonusRepo, log)
+
+	// server hadler
+	h := handler.NewHandler(clientSvc, businessSvc, txSvc, bonusSvc, log)
+
+	router := middleware.Logger(log)(middleware.Recovery(log)(h.Routes()))
+
 	// Http server with timeout
 	srv := &http.Server{
-		Addr: ":" + cfg.Server.Port,
-		Handler: nil,
-		ReadTimeout: 15 * time.Second, // request timeout
+		Addr:         ":" + cfg.Server.Port,
+		Handler:      router,
+		ReadTimeout:  15 * time.Second, // request timeout
 		WriteTimeout: 15 * time.Second, // response timeout
-		IdleTimeout: 60 * time.Second, // keep-alive timeout
+		IdleTimeout:  60 * time.Second, // keep-alive timeout
 	}
 	log.Info("server started", "port", cfg.Server.Port)
 

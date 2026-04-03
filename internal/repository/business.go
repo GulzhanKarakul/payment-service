@@ -14,13 +14,13 @@ type postgresBusinessRepo struct {
 }
 
 func NewBusinessRepository(db *sql.DB) *postgresBusinessRepo {
-	return &postgresBusinessRepo{ db: db }
+	return &postgresBusinessRepo{db: db}
 }
 
 func (r *postgresBusinessRepo) Create(
 	ctx context.Context,
 	name, ownerPhone string,
-)( domain.Business, error ) {
+) (domain.Business, error) {
 	var b domain.Business
 	err := r.db.QueryRowContext(
 		ctx,
@@ -41,7 +41,7 @@ func (r *postgresBusinessRepo) Create(
 func (r *postgresBusinessRepo) GetByID(
 	ctx context.Context,
 	id string,
-)(domain.Business, error) {
+) (domain.Business, error) {
 	var b domain.Business
 	err := r.db.QueryRowContext(
 		ctx,

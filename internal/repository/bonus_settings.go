@@ -14,7 +14,7 @@ type postgresBonusSettingsRepo struct {
 }
 
 func NewBonusSettingsRepository(db *sql.DB) *postgresBonusSettingsRepo {
-	return &postgresBonusSettingsRepo{ db: db }
+	return &postgresBonusSettingsRepo{db: db}
 }
 
 func (r *postgresBonusSettingsRepo) Upsert(

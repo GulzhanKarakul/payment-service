@@ -8,7 +8,7 @@ import (
 
 // ClientRepository defines data access contract for clients.
 type ClientRepository interface {
-	Create(ctx context.Context, name, phone string,)(domain.Client, error) 
+	Create(ctx context.Context, phone, name string) (domain.Client, error)
 	GetByID(ctx context.Context, id string) (domain.Client, error)
 	GetByPhone(ctx context.Context, phone string) (domain.Client, error)
 	UpdateBonusBalance(ctx context.Context, id string, bonus int64) (domain.Client, error)

@@ -8,7 +8,7 @@ import (
 
 // ClientService defines business logic contract for clients
 type ClientService interface {
-	Create(ctx context.Context, name, phone string) (domain.Client, error)
+	Create(ctx context.Context, phone, name string) (domain.Client, error)
 	GetByID(ctx context.Context, id string) (domain.Client, error)
 	GetByPhone(ctx context.Context, phone string) (domain.Client, error)
 }
@@ -17,6 +17,7 @@ type ClientService interface {
 type BusinessService interface {
 	Create(ctx context.Context, name, ownerPhone string) (domain.Business, error)
 	GetByID(ctx context.Context, id string) (domain.Business, error)
+	UpdateBonusBalance(ctx context.Context, id string, delta int64) (domain.Business, error)
 }
 
 // BonusSettingsService defines business logic contract for bonus settings

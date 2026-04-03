@@ -9,12 +9,12 @@ import (
 )
 
 type bonusSettingsService struct {
-	repo BonusSettingsRepository
+	repo    BonusSettingsRepository
 	bizRepo BusinessRepository
-	log *slog.Logger
+	log     *slog.Logger
 }
 
-func NewBonusSettingsService(repo BonusSettingsRepository, bizRepo BusinessRepository, log *slog.Logger) BonusSettingsService{
+func NewBonusSettingsService(repo BonusSettingsRepository, bizRepo BusinessRepository, log *slog.Logger) BonusSettingsService {
 	return &bonusSettingsService{repo: repo, bizRepo: bizRepo, log: log}
 }
 
@@ -32,7 +32,7 @@ func (s *bonusSettingsService) Upsert(
 	if bonusPercent <= 0 {
 		return domain.BonusSettings{}, fmt.Errorf("bonusSettingsService.Upsert: %w", domain.ErrInvalidInput)
 	}
-	
+
 	bs, err := s.repo.Upsert(ctx, businessID, bonusPercent, isActive)
 	if err != nil {
 		return domain.BonusSettings{}, fmt.Errorf("bonusSettingsService.Upsert: %w", err)

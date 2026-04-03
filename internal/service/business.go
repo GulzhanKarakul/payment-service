@@ -10,7 +10,7 @@ import (
 
 type businessService struct {
 	repo BusinessRepository
-	log *slog.Logger
+	log  *slog.Logger
 }
 
 func NewBusinessService(repo BusinessRepository, log *slog.Logger) BusinessService {
@@ -30,6 +30,15 @@ func (s *businessService) GetByID(ctx context.Context, id string) (domain.Busine
 	business, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return domain.Business{}, fmt.Errorf("businessService.GetByID: %w", err)
+	}
+
+	return business, nil
+}
+
+func (s *businessService) UpdateBonusBalance(ctx context.Context, id string, delta int64) (domain.Business, error) {
+	business, err := s.repo.UpdateBonusBalance(ctx, id, delta)
+	if err != nil {
+		return domain.Business{}, fmt.Errorf("businessService.UpdateBonusBalance: %w", err)
 	}
 
 	return business, nil

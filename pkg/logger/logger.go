@@ -16,10 +16,10 @@ func New(level string) *slog.Logger {
 		l = slog.LevelWarn
 	case "error":
 		l = slog.LevelError
-	default: 
+	default:
 		l = slog.LevelInfo
 	}
-	
+
 	handler := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: l,
 	})
