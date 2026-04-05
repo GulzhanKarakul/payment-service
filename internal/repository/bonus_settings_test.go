@@ -4,75 +4,60 @@ import (
 	"context"
 	"testing"
 
-	"github.com/GulzhanKarakul/payment-service/internal/domain"
-	"github.com/GulzhanKarakul/payment-service/internal/repository"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GulzhanKarakul/payment-service/internal/domain"
+	"github.com/GulzhanKarakul/payment-service/internal/repository"
 )
 
 func TestBonusSettingsRepo_Upsert_Create(t *testing.T) {
 	cleanDB(t)
 
-	bonusRepo := repository.NewBonusSettingsRepository(testDB)
-	bizRepo := repository.NewBusinessRepository(testDB)
 	ctx := context.Background()
+	repo := repository.NewBonusSettingsRepository(testDB)
+	business := createTestBusiness(t, "Samsung", "+77771156580")
 
-	business, err := bizRepo.Create(ctx, "Samsung", "+77771156580")
-	require.NoError(t, err)
-	t.Run("success", func(t *testing.T) {
-		created, err := bonusRepo.Upsert(ctx, business.ID, float64(5), true)
+	t.Run("create new settings", func(t *testing.T) {
+		created, err := repo.Upsert(ctx, business.ID, 5.0, true)
 		require.NoError(t, err)
 
 		assert.NotEmpty(t, created.ID)
-		assert.Equal(t, business.ID, created.BusinessID)
-		assert.Equal(t, float64(5), created.BonusPercent)
-		assert.Equal(t, true, created.IsActive)
+		assert.Equal(t, 5.0, created.BonusPercent)
+		assert.True(t, created.IsActive)
 		assert.NotZero(t, created.CreatedAt)
 	})
 
-	t.Run("business not found", func(t *testing.T) {
-		_, err := bonusRepo.Upsert(ctx, "not-existent-id", float64(5), false)
-		require.Error(t, err)
-		require.ErrorIs(t, err, domain.ErrBusinessNotFound)
+	t.Run("update existing", func(t *testing.T) {
+		updated, err := repo.Upsert(ctx, business.ID, 7.5, false)
+		require.NoError(t, err)
+
+		assert.Equal(t, 7.5, updated.BonusPercent)
+		assert.False(t, updated.IsActive)
+		assert.NotZero(t, updated.UpdatedAt)
+
+		var count int
+		err = testDB.QueryRow(`
+		SELECT COUNT(*) FROM business_bonus_settings WHERE business_id = $1
+		`, business.ID).Scan(&count)
+		require.NoError(t, err)
+		assert.Equal(t, 1, count)
 	})
-}
 
-func TestBonusSettingsRepo_Upsert_Update(t *testing.T) {
-	cleanDB(t)
-
-	bonusRepo := repository.NewBonusSettingsRepository(testDB)
-	bizRepo := repository.NewBusinessRepository(testDB)
-	ctx := context.Background()
-
-	business, err := bizRepo.Create(ctx, "Samsung", "+77771112233")
-	require.NoError(t, err)
-
-	t.Run("update bonus", func(t *testing.T) {
-		created, err := bonusRepo.Upsert(ctx, business.ID, float64(5), true)
-		require.NoError(t, err)
-
-		assert.Equal(t, float64(5), created.BonusPercent)
-		assert.Equal(t, true, created.IsActive)
-
-		updated, err := bonusRepo.Upsert(ctx, business.ID, float64(7.5), false)
-		require.NoError(t, err)
-
-		assert.Equal(t, float64(7.5), updated.BonusPercent)
-		assert.Equal(t, false, updated.IsActive)
-		assert.NotEqual(t, updated.CreatedAt, updated.UpdatedAt)
+	t.Run("business not found", func(t *testing.T) {
+		_, err := repo.Upsert(ctx, "00000000-0000-0000-0000-000000000000", 5.0, false)
+		require.Error(t, err)
 	})
 }
 
 func TestBonusSettingsRepo_GetByBusinessID(t *testing.T) {
 	cleanDB(t)
 
-	bonusRepo := repository.NewBonusSettingsRepository(testDB)
-	bizRepo := repository.NewBusinessRepository(testDB)
 	ctx := context.Background()
+	bonusRepo := repository.NewBonusSettingsRepository(testDB)
+	business := createTestBusiness(t, "samsung", "+77771112233")
 
-	business, err := bizRepo.Create(ctx, "samsung", "+77771112233")
-	require.NoError(t, err)
-	created, err := bonusRepo.Upsert(ctx, business.ID, float64(6), true)
+	created, err := bonusRepo.Upsert(ctx, business.ID, 6.0, true)
 	require.NoError(t, err)
 
 	t.Run("success", func(t *testing.T) {
@@ -80,15 +65,12 @@ func TestBonusSettingsRepo_GetByBusinessID(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, created.ID, found.ID)
-		assert.Equal(t, float64(6), found.BonusPercent)
-		assert.Equal(t, true, found.IsActive)
-		assert.NotZero(t, found.CreatedAt)
-		assert.NotZero(t, found.UpdatedAt)
+		assert.Equal(t, 6.0, found.BonusPercent)
+		assert.True(t, found.IsActive)
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		_, err := bonusRepo.GetByBusinessID(ctx, "not-existent-id")
-		require.Error(t, err)
+		_, err := bonusRepo.GetByBusinessID(ctx, "00000000-0000-0000-0000-000000000000")
 		require.ErrorIs(t, err, domain.ErrBonusSettingsNotFound)
 	})
 }

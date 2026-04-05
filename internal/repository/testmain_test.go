@@ -12,13 +12,19 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/wait"
+
+	"github.com/GulzhanKarakul/payment-service/internal/domain"
+	"github.com/GulzhanKarakul/payment-service/internal/repository"
 )
 
 // testDB - set one db for all tests
 var testDB *sql.DB
+
+var errAny = fmt.Errorf("any error")
 
 // TestMain runs before all repository tests to:
 // - create one instance for all tests
@@ -33,6 +39,10 @@ func TestMain(m *testing.M) {
 		slog.Error("failed to start postgres container", "error", err)
 		os.Exit(1)
 	}
+
+	defer db.Close()
+	defer container.Terminate(ctx)
+
 	testDB = db
 
 	// migrates up
@@ -41,11 +51,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	code := m.Run()
-	defer db.Close()
-	defer container.Terminate(ctx)
-
-	os.Exit(code)
+	os.Exit(m.Run())
 }
 
 // startPostgres sets up instance of postgres container and returns connection
@@ -122,4 +128,49 @@ func cleanDB(t *testing.T) {
 				RESTART IDENTITY CASCADE
 	`)
 	require.NoError(t, err)
+}
+
+func createTestClient(t *testing.T, phone, name string) domain.Client {
+	t.Helper()
+	client, err := repository.NewClientRepository(testDB).Create(
+		context.Background(), phone, name,
+	)
+	require.NoError(t, err)
+	return client
+}
+
+func createTestBusiness(t *testing.T, name, ownerPhone string) domain.Business {
+	t.Helper()
+	business, err := repository.NewBusinessRepository(testDB).Create(
+		context.Background(), name, ownerPhone,
+	)
+	require.NoError(t, err)
+	return business
+}
+
+func createTestBusinessWithBonusBalance(t *testing.T, name, ownerPhone string, delta int64) domain.Business {
+	t.Helper()
+	business := createTestBusiness(t, name, ownerPhone)
+	updated, err := repository.NewBusinessRepository(testDB).UpdateBonusBalance(
+		context.Background(), business.ID, delta,
+	)
+	require.NoError(t, err)
+	assert.Equal(t, delta, updated.BonusBalance)
+	return updated
+}
+
+func createTestTransaction(
+	t *testing.T, 
+	clientID, 
+	businessID string, 
+	amount int64, 
+	bonusPercent float64, 
+	description *string,
+) domain.Transaction{
+	t.Helper()
+	tx, err := repository.NewTransactionRepository(testDB).CreateWithBonus(
+		context.Background(), clientID, businessID, amount, bonusPercent, description,
+	)
+	require.NoError(t, err)
+	return tx
 }

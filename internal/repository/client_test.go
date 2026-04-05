@@ -4,15 +4,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/GulzhanKarakul/payment-service/internal/domain"
-	"github.com/GulzhanKarakul/payment-service/internal/repository"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GulzhanKarakul/payment-service/internal/domain"
+	"github.com/GulzhanKarakul/payment-service/internal/repository"
 )
 
 func TestClientRepo_Create(t *testing.T) {
-	cleanDB(t)
-
 	repo := repository.NewClientRepository(testDB)
 	ctx := context.Background()
 
@@ -20,44 +19,53 @@ func TestClientRepo_Create(t *testing.T) {
 		name       string
 		phone      string
 		clientName string
-		wantErr    bool
+		wantErr    error
 	}{
 		{
 			name:       "success",
 			phone:      "+77771156580",
 			clientName: "Gulzhan",
-			wantErr:    false,
+			wantErr:    nil,
 		},
 		{
-			name:       "empty phone",
+			name:       "empty phone NOT NULL constraint",
 			phone:      "",
 			clientName: "Gulzhan",
-			wantErr:    true, // NOT NULL constraint
+			wantErr:    errAny,
+		},
+		{
+			name: "empty name NOT NULL constraint",
+			phone: "+77771112233",
+			clientName: "",
+			wantErr: errAny,
 		},
 	}
 
 	// act
 	for _, tt := range tests {
+		cleanDB(t)
 		t.Run(tt.name, func(t *testing.T) {
 			// arrange
 			client, err := repo.Create(ctx, tt.phone, tt.clientName)
 
-			if tt.wantErr {
-				require.Error(t, err) // что делает метод Error
-				return                // зачем ретерн если реквайер и так не даст след коду выполниться?
+			if tt.wantErr != nil {
+				require.Error(t, err)
+				return
 			}
 
 			// assert
 			require.NoError(t, err)
 			assert.NotEmpty(t, client.ID)
 			assert.Equal(t, tt.phone, client.Phone)
-			assert.Zero(t, client.BonusBalance)
+			assert.Equal(t, tt.clientName, client.Name)
+			assert.Equal(t, int64(0), client.BonusBalance)
+			assert.True(t, client.IsActive)
 			assert.NotZero(t, client.CreatedAt)
+			assert.NotZero(t, client.UpdatedAt)
 		})
 	}
 }
 
-// вопрос такой а че не сделать этот и первый тест вместе???? один же метод проверяем
 func TestClientRepo_Create_DuplicatePhone(t *testing.T) {
 	cleanDB(t)
 
@@ -94,7 +102,7 @@ func TestClientRepo_GetByID(t *testing.T) {
 	})
 
 	t.Run("not_found", func(t *testing.T) {
-		_, err := repo.GetByID(ctx, "non-existent-id")
+		_, err := repo.GetByID(ctx, "00000000-0000-0000-0000-000000000000")
 		require.ErrorIs(t, err, domain.ErrClientNotFound)
 	})
 }
@@ -105,8 +113,7 @@ func TestClientRepo_GetByPhone(t *testing.T) {
 	repo := repository.NewClientRepository(testDB)
 	ctx := context.Background()
 
-	created, err := repo.Create(ctx, "+7771156580", "Gulzhan")
-	require.NoError(t, err)
+	created := createTestClient(t, "+77771156580", "Gulzhan")
 
 	t.Run("success", func(t *testing.T) {
 		client, err := repo.GetByPhone(ctx, created.Phone)
@@ -121,8 +128,7 @@ func TestClientRepo_GetByPhone(t *testing.T) {
 	})
 
 	t.Run("not_found", func(t *testing.T) {
-		_, err := repo.GetByPhone(ctx, "+7777")
-		require.Error(t, err)
+		_, err := repo.GetByPhone(ctx, "+777700000000")
 		require.ErrorIs(t, err, domain.ErrClientNotFound)
 	})
 }
@@ -133,21 +139,21 @@ func TestClientRepo_UpdateBonusBalance(t *testing.T) {
 	repo := repository.NewClientRepository(testDB)
 	ctx := context.Background()
 
-	created, err := repo.Create(ctx, "+77771156580", "Gulzhan")
-	require.NoError(t, err)
-	assert.Equal(t, int64(0), created.BonusBalance)
-
 	t.Run("add bonus", func(t *testing.T) {
+		created := createTestClient(t, "+77771156580", "Gulzhan")
+
 		updated, err := repo.UpdateBonusBalance(ctx, created.ID, 500)
 		require.NoError(t, err)
+
 		assert.Equal(t, int64(500), updated.BonusBalance)
+		assert.True(t, updated.UpdatedAt.After(created.UpdatedAt))
 	})
 
 	t.Run("subtract bonus", func(t *testing.T) {
-		client, err := repo.UpdateBonusBalance(ctx, created.ID, 10000)
-		require.NoError(t, err)
+		created := createTestClient(t, "+77771156580", "Gulzhan")
 
-		assert.Equal(t, int64(10000), client.BonusBalance)
+		_, err := repo.UpdateBonusBalance(ctx, created.ID, 10000)
+		require.NoError(t, err)
 
 		updated, err := repo.UpdateBonusBalance(ctx, created.ID, -3000)
 		require.NoError(t, err)
@@ -156,8 +162,7 @@ func TestClientRepo_UpdateBonusBalance(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		_, err := repo.UpdateBonusBalance(ctx, "not-existent-id", 4000)
-		require.Error(t, err)
+		_, err := repo.UpdateBonusBalance(ctx, "00000000-0000-0000-0000-000000000000", 4000)
 		require.ErrorIs(t, err, domain.ErrClientNotFound)
 	})
 }

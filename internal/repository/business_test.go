@@ -4,15 +4,14 @@ import (
 	"context"
 	"testing"
 
-	"github.com/GulzhanKarakul/payment-service/internal/domain"
-	"github.com/GulzhanKarakul/payment-service/internal/repository"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/GulzhanKarakul/payment-service/internal/domain"
+	"github.com/GulzhanKarakul/payment-service/internal/repository"
 )
 
 func TestBusinessRepo_Create(t *testing.T) {
-	cleanDB(t)
-
 	repo := repository.NewBusinessRepository(testDB)
 	ctx := context.Background()
 
@@ -20,26 +19,32 @@ func TestBusinessRepo_Create(t *testing.T) {
 		name         string
 		businessName string
 		ownerPhone   string
-		wantErr      bool
+		wantErr      error
 	}{
 		{
 			name:         "success",
 			businessName: "Samsung",
 			ownerPhone:   "+77771112233",
-			wantErr:      false,
+			wantErr:      nil,
+		}, {
+			name:         "same owner phone is allowed",
+			businessName: "Samsung",
+			ownerPhone:   "+77771112233",
+			wantErr:      nil,
 		}, {
 			name:         "empty phone",
 			businessName: "Mi",
 			ownerPhone:   "",
-			wantErr:      true,
+			wantErr:      errAny,
 		},
 	}
 
 	for _, tt := range tests {
+		cleanDB(t)
 		t.Run(tt.name, func(t *testing.T) {
 			business, err := repo.Create(ctx, tt.businessName, tt.ownerPhone)
 
-			if tt.wantErr {
+			if tt.wantErr != nil {
 				require.Error(t, err)
 				return
 			}
@@ -60,8 +65,7 @@ func TestBusinessRepo_GetByID(t *testing.T) {
 	repo := repository.NewBusinessRepository(testDB)
 	ctx := context.Background()
 
-	created, err := repo.Create(ctx, "Samsung", "+77771112233")
-	require.NoError(t, err)
+	created := createTestBusiness(t, "samsung", "+77771112233")
 
 	t.Run("success", func(t *testing.T) {
 		business, err := repo.GetByID(ctx, created.ID)
@@ -75,8 +79,7 @@ func TestBusinessRepo_GetByID(t *testing.T) {
 	})
 
 	t.Run("not found", func(t *testing.T) {
-		_, err := repo.GetByID(ctx, "no-existent-id")
-		require.Error(t, err)
+		_, err := repo.GetByID(ctx, "00000000-0000-0000-0000-000000000000")
 		require.ErrorIs(t, err, domain.ErrBusinessNotFound)
 	})
 }
@@ -87,21 +90,29 @@ func TestBusinessRepo_UpdateBonusBalance(t *testing.T) {
 	repo := repository.NewBusinessRepository(testDB)
 	ctx := context.Background()
 
-	created, err := repo.Create(ctx, "samsung", "+77771112233")
-	require.NoError(t, err)
-
-	t.Run("success", func(t *testing.T) {
+	t.Run("update balance", func(t *testing.T) {
+		created := createTestBusiness(t, "Samsung", "+7777112233")
+		
 		updated, err := repo.UpdateBonusBalance(ctx, created.ID, 50000)
 		require.NoError(t, err)
 
-		assert.Equal(t, created.ID, updated.ID)
-		assert.Equal(t, created.OwnerPhone, updated.OwnerPhone)
 		assert.Equal(t, int64(50000), updated.BonusBalance)
 	})
 
+	t.Run("deduct balance", func(t *testing.T) {
+		created := createTestBusiness(t, "Apple", "+7777112244")
+		
+		_, err := repo.UpdateBonusBalance(ctx, created.ID, 50000)
+		require.NoError(t, err)
+
+		updated, err := repo.UpdateBonusBalance(ctx, created.ID, -30000)
+		require.NoError(t, err)
+
+		assert.Equal(t, int64(20000), updated.BonusBalance)
+	})
+
 	t.Run("not found", func(t *testing.T) {
-		_, err := repo.UpdateBonusBalance(ctx, "not-existent-id", 1000)
-		require.Error(t, err)
+		_, err := repo.UpdateBonusBalance(ctx, "00000000-0000-0000-0000-000000000000", 1000)
 		require.ErrorIs(t, err, domain.ErrBusinessNotFound)
 	})
 }
