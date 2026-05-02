@@ -24,13 +24,13 @@ func (s *bonusSettingsService) Upsert(
 	bonusPercent float64,
 	isActive bool,
 ) (domain.BonusSettings, error) {
+	if bonusPercent <= 0 {
+		return domain.BonusSettings{}, fmt.Errorf("bonusSettingsService.Upsert: %w", domain.ErrInvalidInput)
+	}
+	
 	_, err := s.bizRepo.GetByID(ctx, businessID)
 	if err != nil {
 		return domain.BonusSettings{}, fmt.Errorf("bonusSettingsService.Upsert: %w", err)
-	}
-
-	if bonusPercent <= 0 {
-		return domain.BonusSettings{}, fmt.Errorf("bonusSettingsService.Upsert: %w", domain.ErrInvalidInput)
 	}
 
 	bs, err := s.repo.Upsert(ctx, businessID, bonusPercent, isActive)

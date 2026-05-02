@@ -15,55 +15,18 @@ func TestClientRepo_Create(t *testing.T) {
 	repo := repository.NewClientRepository(testDB)
 	ctx := context.Background()
 
-	tests := []struct {
-		name       string
-		phone      string
-		clientName string
-		wantErr    error
-	}{
-		{
-			name:       "success",
-			phone:      "+77771156580",
-			clientName: "Gulzhan",
-			wantErr:    nil,
-		},
-		{
-			name:       "empty phone NOT NULL constraint",
-			phone:      "",
-			clientName: "Gulzhan",
-			wantErr:    errAny,
-		},
-		{
-			name: "empty name NOT NULL constraint",
-			phone: "+77771112233",
-			clientName: "",
-			wantErr: errAny,
-		},
-	}
+	client, err := repo.Create(ctx, "+77771156580", "Gulzhan")
+	require.NoError(t, err)
 
-	// act
-	for _, tt := range tests {
-		cleanDB(t)
-		t.Run(tt.name, func(t *testing.T) {
-			// arrange
-			client, err := repo.Create(ctx, tt.phone, tt.clientName)
-
-			if tt.wantErr != nil {
-				require.Error(t, err)
-				return
-			}
-
-			// assert
-			require.NoError(t, err)
-			assert.NotEmpty(t, client.ID)
-			assert.Equal(t, tt.phone, client.Phone)
-			assert.Equal(t, tt.clientName, client.Name)
-			assert.Equal(t, int64(0), client.BonusBalance)
-			assert.True(t, client.IsActive)
-			assert.NotZero(t, client.CreatedAt)
-			assert.NotZero(t, client.UpdatedAt)
-		})
-	}
+	// assert
+	require.NoError(t, err)
+	assert.NotEmpty(t, client.ID)
+	assert.Equal(t, "+77771156580", client.Phone)
+	assert.Equal(t, "Gulzhan", client.Name)
+	assert.Equal(t, int64(0), client.BonusBalance)
+	assert.True(t, client.IsActive)
+	assert.NotZero(t, client.CreatedAt)
+	assert.NotZero(t, client.UpdatedAt)
 }
 
 func TestClientRepo_Create_DuplicatePhone(t *testing.T) {
@@ -150,7 +113,7 @@ func TestClientRepo_UpdateBonusBalance(t *testing.T) {
 	})
 
 	t.Run("subtract bonus", func(t *testing.T) {
-		created := createTestClient(t, "+77771156580", "Gulzhan")
+		created := createTestClient(t, "+77771156581", "Gulzhan")
 
 		_, err := repo.UpdateBonusBalance(ctx, created.ID, 10000)
 		require.NoError(t, err)

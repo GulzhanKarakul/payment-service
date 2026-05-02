@@ -24,8 +24,6 @@ import (
 // testDB - set one db for all tests
 var testDB *sql.DB
 
-var errAny = fmt.Errorf("any error")
-
 // TestMain runs before all repository tests to:
 // - create one instance for all tests
 // - migrate up one time for all tests
@@ -101,7 +99,7 @@ func startPostgres(ctx context.Context) (testcontainers.Container, *sql.DB, stri
 
 func applyMigrations(dsn string) error {
 	m, err := migrate.New(
-		"file://../../../migrations",
+		"file://../../migrations",
 		dsn,
 	)
 	if err != nil {

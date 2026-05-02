@@ -1,0 +1,12 @@
+with-expecter: true
+
+packages:
+  github.com/GulzhanKarakul/payment-service/internal/service:
+    config:
+      dir: "internal/service/mocks"
+      outpkg: "mocks"
+    interfaces:
+      ClientRepository:
+      BusinessRepository:
+      BonusSettingsRepository:
+      TransactionRepository:

@@ -28,7 +28,7 @@ type BonusSettingsService interface {
 
 // TransactionService defines business logic contract for transactions
 type TransactionService interface {
-	Create(ctx context.Context, businessId, clientId string, amount int64, description *string) (domain.Transaction, error)
+	Create(ctx context.Context, clientID, businessID string, amount int64, description *string) (domain.Transaction, error)
 	GetByID(ctx context.Context, id string) (domain.Transaction, error)
 	GetByClientID(ctx context.Context, clientId string, limit, offset int) ([]domain.Transaction, error)
 	Cancel(ctx context.Context, id string) error

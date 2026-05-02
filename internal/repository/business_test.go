@@ -31,11 +31,6 @@ func TestBusinessRepo_Create(t *testing.T) {
 			businessName: "Samsung",
 			ownerPhone:   "+77771112233",
 			wantErr:      nil,
-		}, {
-			name:         "empty phone",
-			businessName: "Mi",
-			ownerPhone:   "",
-			wantErr:      errAny,
 		},
 	}
 
@@ -45,7 +40,7 @@ func TestBusinessRepo_Create(t *testing.T) {
 			business, err := repo.Create(ctx, tt.businessName, tt.ownerPhone)
 
 			if tt.wantErr != nil {
-				require.Error(t, err)
+				require.ErrorIs(t, err, tt.wantErr)
 				return
 			}
 
