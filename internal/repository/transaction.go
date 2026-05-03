@@ -185,8 +185,7 @@ func (r *postgresTransactionRepo) Cancel(
 ) error {
 	var status domain.TransactionStatus
 	err := r.db.QueryRowContext(ctx,
-		`SELECT status FROM transactions 
-			 WHERE id = $1 AND deleted_at IS NULL`,
+		`SELECT status FROM transactions WHERE id = $1`,
 		id,
 	).Scan(&status)
 	if err != nil {

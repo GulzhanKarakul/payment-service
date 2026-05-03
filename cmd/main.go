@@ -31,12 +31,6 @@ func main() {
 	defer db.Close()
 	log.Info("connected to database")
 
-	// 	1. Создать все репозитории (4 штуки)
-	// 2. Создать все сервисы (4 штуки)
-	// 3. Создать handler
-	// 4. Подключить middleware к роутеру
-	// 5. Передать h.Routes() в http.Server вместо nil
-
 	// server repositories
 	clientRepo := repository.NewClientRepository(db)
 	businessRepo := repository.NewBusinessRepository(db)

@@ -35,8 +35,8 @@ func NewTransactionService(
 
 func (s *transactionService) Create(
 	ctx context.Context,
-	businessID,
-	clientID string,
+	clientID,
+	businessID string,
 	amount int64,
 	description *string,
 ) (domain.Transaction, error) {

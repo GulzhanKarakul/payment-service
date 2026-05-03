@@ -29,7 +29,7 @@ type BonusSettingsRepository interface {
 
 // TransactionRepository defines data access contract for transactions
 type TransactionRepository interface {
-	CreateWithBonus(ctx context.Context, clientId, businessId string, amount int64, bonusPercent float64, description *string) (domain.Transaction, error)
+	CreateWithBonus(ctx context.Context, clientID, businessID string, amount int64, bonusPercent float64, description *string) (domain.Transaction, error)
 	GetByID(ctx context.Context, id string) (domain.Transaction, error)
 	GetByClientID(ctx context.Context, clientId string, limit, offset int) ([]domain.Transaction, error)
 	Cancel(ctx context.Context, id string) error
