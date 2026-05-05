@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
 
-	"github.com/GulzhanKarakul/payment-service/internal/domain"
+	"github.com/GulzhanKarakul/payment-service/internal/dto"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -22,25 +21,6 @@ func (req upsertBonusSettingsRequest) Validate() error {
 	return nil
 }
 
-type bonusSettingsResponse struct {
-	ID           string    `json:"id"`
-	BusinessID   string    `json:"business_id"`
-	BonusPercent float64   `json:"bonus_percent"`
-	IsActive     bool      `json:"is_active"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-}
-
-func toBonusSettingsResponse(bs domain.BonusSettings) bonusSettingsResponse {
-	return bonusSettingsResponse{
-		ID:           bs.ID,
-		BusinessID:   bs.BusinessID,
-		BonusPercent: bs.BonusPercent,
-		IsActive:     bs.IsActive,
-		CreatedAt:    bs.CreatedAt,
-		UpdatedAt:    bs.UpdatedAt,
-	}
-}
 
 // Upsert POST api/v1/businesses/:{id}/settings
 func (h *Handler) upsertBonusSettings(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +47,7 @@ func (h *Handler) upsertBonusSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toBonusSettingsResponse(bonusSettings))
+	writeJSON(w, http.StatusOK, dto.ToBonusSettingsResponse(bonusSettings))
 }
 
 // GetByBusinessID - GET api/v1/businesses/:{id}/settings
@@ -84,5 +64,5 @@ func (h *Handler) getBonusSettingsByBusinessID(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toBonusSettingsResponse(bonusSettings))
+	writeJSON(w, http.StatusOK, dto.ToBonusSettingsResponse(bonusSettings))
 }

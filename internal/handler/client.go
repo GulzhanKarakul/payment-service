@@ -4,9 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"time"
 
-	"github.com/GulzhanKarakul/payment-service/internal/domain"
+	"github.com/GulzhanKarakul/payment-service/internal/dto"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -28,28 +27,6 @@ func (req createClientRequest) Validate() error {
 	return nil
 }
 
-type clientResponse struct {
-	ID           string    `json:"id"`
-	Phone        string    `json:"phone"`
-	Name         string    `json:"name"`
-	BonusBalance int64     `json:"bonus_balance"`
-	IsActive     bool      `json:"is_active"`
-	CreatedAt    time.Time `json:"created_at"`
-	UpdatedAt    time.Time `json:"updated_at"`
-}
-
-func toClientResponse(c domain.Client) clientResponse {
-	return clientResponse{
-		ID:           c.ID,
-		Phone:        c.Phone,
-		Name:         c.Name,
-		BonusBalance: c.BonusBalance,
-		IsActive:     c.IsActive,
-		CreatedAt:    c.CreatedAt,
-		UpdatedAt:    c.UpdatedAt,
-	}
-}
-
 // createClient - POST api/v1/clients/
 func (h *Handler) createClient(w http.ResponseWriter, r *http.Request) {
 	var req createClientRequest
@@ -69,7 +46,7 @@ func (h *Handler) createClient(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, toClientResponse(client))
+	writeJSON(w, http.StatusCreated, dto.ToClientResponse(client))
 }
 
 // getClientByID - GET api/v1/clients/:{id}
@@ -86,7 +63,7 @@ func (h *Handler) getClientByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toClientResponse(client))
+	writeJSON(w, http.StatusOK, dto.ToClientResponse(client))
 }
 
 // getByPhone - GET api/v1/clients/phone/:{phone}
@@ -103,5 +80,5 @@ func (h *Handler) getClientByPhone(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toClientResponse(client))
+	writeJSON(w, http.StatusOK, dto.ToClientResponse(client))
 }
