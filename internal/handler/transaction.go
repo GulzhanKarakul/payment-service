@@ -5,9 +5,9 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"time"
 
 	"github.com/GulzhanKarakul/payment-service/internal/domain"
+	"github.com/GulzhanKarakul/payment-service/internal/dto"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -31,35 +31,6 @@ func (req createTransactionRequest) Validate() error {
 	return nil
 }
 
-type transactionResponse struct {
-	ID           string                   `json:"id"`
-	BusinessID   string                   `json:"business_id"`
-	ClientID     string                   `json:"client_id"`
-	Amount       int64                    `json:"amount"`
-	BonusAccrued int64                    `json:"bonus_accrued"`
-	Currency     string                   `json:"currency"`
-	Status       domain.TransactionStatus `json:"status"`
-	Description  *string                  `json:"description"`
-	CreatedAt    time.Time                `json:"created_at"`
-	UpdatedAt    time.Time                `json:"updated_at"`
-	DeletedAt    *time.Time               `json:"deleted_at,omitempty"`
-}
-
-func toTransactionResponse(t domain.Transaction) transactionResponse {
-	return transactionResponse{
-		ID:           t.ID,
-		BusinessID:   t.BusinessID,
-		ClientID:     t.ClientID,
-		Amount:       t.Amount,
-		BonusAccrued: t.BonusAccrued,
-		Currency:     t.Currency,
-		Status:       t.Status,
-		Description:  t.Description,
-		CreatedAt:    t.CreatedAt,
-		UpdatedAt:    t.UpdatedAt,
-		DeletedAt:    t.DeletedAt,
-	}
-}
 
 // createTransaction - POST api/v1/transactions/
 func (h *Handler) createTransaction(w http.ResponseWriter, r *http.Request) {
@@ -74,13 +45,13 @@ func (h *Handler) createTransaction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	transaction, err := h.transaction.Create(r.Context(), req.BusinessID, req.ClientID, req.Amount, req.Description)
+	transaction, err := h.transaction.Create(r.Context(), req.ClientID, req.BusinessID, req.Amount, req.Description)
 	if err != nil {
 		h.handleError(w, err)
 		return
 	}
 
-	writeJSON(w, http.StatusCreated, toTransactionResponse(transaction))
+	writeJSON(w, http.StatusCreated, dto.ToTransactionResponse(transaction))
 }
 
 // getTransactionByID - GET api/v1/transactions/:{id}
@@ -97,13 +68,13 @@ func (h *Handler) getTransactionByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toTransactionResponse(transaction))
+	writeJSON(w, http.StatusOK, dto.ToTransactionResponse(transaction))
 }
 
-func toTransactionListResponse(tl []domain.Transaction) []transactionResponse {
-	var result []transactionResponse
+func toTransactionListResponse(tl []domain.Transaction) []dto.TransactionResponse {
+	result := make([]dto.TransactionResponse, 0, len(tl))
 	for _, t := range tl {
-		result = append(result, toTransactionResponse(t))
+		result = append(result, dto.ToTransactionResponse(t))
 	}
 	return result
 }

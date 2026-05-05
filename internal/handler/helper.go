@@ -26,7 +26,8 @@ func (h *Handler) handleError(w http.ResponseWriter, err error) {
 	switch {
 	case errors.Is(err, domain.ErrClientNotFound),
 		errors.Is(err, domain.ErrBusinessNotFound),
-		errors.Is(err, domain.ErrBonusSettingsNotFound):
+		errors.Is(err, domain.ErrBonusSettingsNotFound),
+		errors.Is(err, domain.ErrTransactionNotFound):
 		writeError(w, http.StatusNotFound, "not found")
 
 	case errors.Is(err, domain.ErrClientAlreadyExist),
