@@ -18,7 +18,7 @@ import (
 )
 
 // Post /api/v1/businesses create business
-func TestBusinessHandler_Create_Success_Returns201(t *testing.T) {
+func TestCreateBusiness_Success_Returns201(t *testing.T) {
 	svc := mocks.NewMockBusinessService(t)
 	svc.EXPECT().Create(mock.Anything, testName, testPhone).
 		Return(testBusiness(), nil).Once()
@@ -35,13 +35,13 @@ func TestBusinessHandler_Create_Success_Returns201(t *testing.T) {
 
 	var resp dto.BusinessResponse
 	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
-	assert.Equal(t, testName, resp.Name)
+	assert.Equal(t, testBusiness().Name, resp.Name)
 	assert.Equal(t, testPhone, resp.OwnerPhone)
 	assert.NotEmpty(t, resp.ID)
 	assert.True(t, resp.IsActive)
 }
 
-func TestBusinessHandler_Create_InvalidBody_Returns400(t *testing.T) {
+func TestCreateBusiness_InvalidBody_Returns400(t *testing.T) {
 	tests := []struct {
 		name string
 		body string
@@ -72,7 +72,7 @@ func TestBusinessHandler_Create_InvalidBody_Returns400(t *testing.T) {
 	}
 }
 
-func TestBusinessHandler_Create_AlreadyExist_Returns409(t *testing.T) {
+func TestCreateBusiness_AlreadyExist_Returns409(t *testing.T) {
 	svc := mocks.NewMockBusinessService(t)
 	svc.EXPECT().Create(mock.Anything, testName, testPhone).
 		Return(domain.Business{}, domain.ErrBusinessAlreadyExist).Once()
@@ -92,7 +92,7 @@ func TestBusinessHandler_Create_AlreadyExist_Returns409(t *testing.T) {
 	assert.NotEmpty(t, resp.Error)
 }
 
-func TestBusinessHandler_Create_InternalError_Returns500(t *testing.T) {
+func TestCreateBusiness_InternalError_Returns500(t *testing.T) {
 	svc := mocks.NewMockBusinessService(t)
 	svc.EXPECT().Create(mock.Anything, testName, testPhone).
 		Return(domain.Business{}, errors.New("db connection lost")).Once()
@@ -112,7 +112,7 @@ func TestBusinessHandler_Create_InternalError_Returns500(t *testing.T) {
 }
 
 // Get /api/v1/businesses/{id} get business by id
-func TestBusinessHandler_GetByID(t *testing.T) {
+func TestGetBusinessByID(t *testing.T) {
 	tests := []struct {
 		name string
 		svcReturn domain.Business
@@ -162,7 +162,7 @@ func TestBusinessHandler_GetByID(t *testing.T) {
 }
 
 // Post /api/v1/businesses/{id}/balance Update business balance
-func TestBusinessHandler_UpdateBusinessBalance_Success_Returns200(t *testing.T) {
+func TestUpdateBusinessBalance_Success_Returns200(t *testing.T) {
 	svc := mocks.NewMockBusinessService(t)
 	svc.EXPECT().UpdateBonusBalance(mock.Anything, testBusinessID, testBalance).
 		Return(testBusiness(), nil).Once()
@@ -212,7 +212,7 @@ func TestBusinessHandler_UpdateBonusBalance_InvalidBody_Returns400(t *testing.T)
 	}
 }
 
-func TestBusinessHandler_UpdateBonusBalance_NotFound_Returns404(t *testing.T) {
+func TestUpdateBonusBalance_NotFound_Returns404(t *testing.T) {
 	svc := mocks.NewMockBusinessService(t)
 	svc.EXPECT().UpdateBonusBalance(mock.Anything, testBusinessID, testBalance).
 		Return(domain.Business{}, domain.ErrBusinessNotFound).Once()

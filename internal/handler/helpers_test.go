@@ -1,6 +1,7 @@
 package handler_test
 
 import (
+	"io"
 	"log/slog"
 	"net/http"
 	"time"
@@ -28,11 +29,12 @@ const (
 	testName = "Gulzhan Karakul"
 	testAmount int64 = 500_000
 	testBalance int64 = 10_000_00
+	testDescription = "оплата кофе"
 )
 
 // logger
 func testLogger() *slog.Logger {
-	return slog.New(slog.DiscardHandler)
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
 // handler factory
@@ -103,6 +105,7 @@ func testTransaction() domain.Transaction {
 		Status: domain.StatusCompleted,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
+		Description: strPtr(testDescription),
 	}
 }
 

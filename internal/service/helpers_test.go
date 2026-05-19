@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"errors"
+	"io"
 	"log/slog"
 
 	"github.com/GulzhanKarakul/payment-service/internal/domain"
@@ -15,7 +16,7 @@ var (
 
 // logger
 func testLogger() *slog.Logger {
-	return slog.New(slog.DiscardHandler)
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }
 
 // domain builders

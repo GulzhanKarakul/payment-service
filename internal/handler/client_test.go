@@ -18,7 +18,7 @@ import (
 )
 
 // Post /api/v1/clients - create client
-func TestClientHandler_Create_Success_Returns201(t *testing.T) {
+func TestCreateClient_Success_Returns201(t *testing.T) {
 	svc := mocks.NewMockClientService(t)
 	svc.EXPECT().Create(mock.Anything, testPhone, testName).
 		Return(testClient(), nil).Once()
@@ -43,7 +43,7 @@ func TestClientHandler_Create_Success_Returns201(t *testing.T) {
 }
 
 // валидные ошибки: инвалидный боди (тдд), ответ 400 всегда, сервис не вызывается
-func TestClientHandler_Create_InvalidBody_Returns400(t *testing.T) {
+func TestCreateClient_InvalidBody_Returns400(t *testing.T) {
 	tests := []struct {
 		name string
 		body string
@@ -75,7 +75,7 @@ func TestClientHandler_Create_InvalidBody_Returns400(t *testing.T) {
 	}
 }
 
-func TestClientHandler_Create_AlreadyExist_Returns409(t *testing.T) {
+func TestCreateClient_AlreadyExist_Returns409(t *testing.T) {
 	svc := mocks.NewMockClientService(t)
 	svc.EXPECT().Create(mock.Anything, testPhone, testName).
 		Return(domain.Client{}, domain.ErrClientAlreadyExist).Once()
@@ -96,7 +96,7 @@ func TestClientHandler_Create_AlreadyExist_Returns409(t *testing.T) {
 }
 
 // Get /api/v1/clients/{id} get cliert by id
-func TestClientHandler_GetByID(t *testing.T) {
+func TestGetClientByID(t *testing.T) {
 	tests := []struct {
 		name string
 		svcReturn domain.Client
@@ -146,7 +146,7 @@ func TestClientHandler_GetByID(t *testing.T) {
 }
 
 // Get /api/v1/clients/phone/{phone}
-func TestClientHandler_GetByPhone(t *testing.T) {
+func TestGetClientByPhone(t *testing.T) {
 	tests := []struct {
 		name string
 		svcReturn domain.Client

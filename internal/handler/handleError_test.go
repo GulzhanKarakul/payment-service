@@ -158,3 +158,24 @@ func TestHandleError_MapsCorrectHTTPCodes(t *testing.T) {
 		})
 	}
 }
+
+func TestHandleError_500DoesNotLeakInternalDetails(t *testing.T) {
+	internalError := errors.New("pq: connection to server lost")
+
+	svc := mocks.NewMockClientService(t)
+	svc.EXPECT().GetByID(mock.Anything, testClientID).Return(domain.Client{}, internalError).Once()
+	router := newHandler(svc, nil, nil, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/clients/"+testClientID, nil)
+	rec := httptest.NewRecorder()
+
+	router.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+
+	var resp errorResponse
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+	assert.Equal(t, "internal server error", resp.Error)
+	assert.NotContains(t, resp.Error, "pq:")
+	assert.NotContains(t, resp.Error, "connection")
+}

@@ -17,7 +17,7 @@ import (
 )
 
 // Upsert POST api/v1/businesses/:{id}/settings
-func TestBonusSettingsHandler_Upsert_Success_Returns200(t *testing.T) {
+func TestUpsertBonusSettings_Success_Returns200(t *testing.T) {
 	svc := mocks.NewMockBonusSettingsService(t)
 	svc.EXPECT().Upsert(mock.Anything, testBusinessID, 5.0, true).
 		Return(testBonusSettings(), nil).Once()
@@ -38,7 +38,7 @@ func TestBonusSettingsHandler_Upsert_Success_Returns200(t *testing.T) {
 	assert.True(t, resp.IsActive)
 }
 
-func TestBonusSettingsHandler_Upsert_DeactivateSettings_Returns200(t *testing.T) {
+func TestUpsertBonusSettings_DeactivateSettings_Returns200(t *testing.T) {
 	svc := mocks.NewMockBonusSettingsService(t)
 	svc.EXPECT().Upsert(mock.Anything, testBusinessID, 5.0, false).
 		Return(testInactiveBonusSettings(), nil).Once()
@@ -58,7 +58,7 @@ func TestBonusSettingsHandler_Upsert_DeactivateSettings_Returns200(t *testing.T)
 	assert.False(t, resp.IsActive)
 }
 
-func TestBonusSettingsHandler_Upsert_InvalidBody_Returns400(t *testing.T) {
+func TestUpsertBonusSettings_InvalidBody_Returns400(t *testing.T) {
 	tests := []struct {
 		name string
 		body string
@@ -87,7 +87,7 @@ func TestBonusSettingsHandler_Upsert_InvalidBody_Returns400(t *testing.T) {
 	}
 }
 
-func TestBonusSettingsHandler_Upsert_BusinessNotFound_Returns404(t *testing.T) {
+func TestUpsertBonusSettings_BusinessNotFound_Returns404(t *testing.T) {
 	svc := mocks.NewMockBonusSettingsService(t)
 	svc.EXPECT().Upsert(mock.Anything, testBusinessID, 5.0, true).
 		Return(domain.BonusSettings{}, domain.ErrBusinessNotFound).Once()
@@ -107,7 +107,7 @@ func TestBonusSettingsHandler_Upsert_BusinessNotFound_Returns404(t *testing.T) {
 }
 
 // GetByBusinessID - GET api/v1/businesses/:{id}/settings
-func TestBonusSettingsHandler_GetByBusinessID(t *testing.T) {
+func TestBonusSettingGetByBusinessID(t *testing.T) {
 	tests := []struct {
 		name string
 		svcReturn domain.BonusSettings

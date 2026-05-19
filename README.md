@@ -1,7 +1,7 @@
-# Payment Service — Техническое Задание v8.0
+# Payment Service — Техническое Задание v9.0
 **Уровень:** Production-Ready Go Backend
 **Автор:** Гульжан Каракул | github.com/GulzhanKarakul/payment-service
-**Обновлено:** service тесты готовы, coverage 96.3%, идём к handler тестам
+**Обновлено:** handler тесты готовы, coverage 90.2%, middleware 95.5%, идём к Auth
 
 ---
 
@@ -289,6 +289,31 @@ COMMENT ON для документации схемы.
 ✅ coverage: 96.3%
 ```
 
+### internal/dto/ ✅
+— ClientResponse, BusinessResponse, BonusSettingsResponse, TransactionResponse
+— Mapper функции: ToClientResponse, ToBusinessResponse и т.д.
+— Single source of truth для API контракта
+— Handler и тесты импортируют из dto, не дублируют structs
+
+### Тесты — Handler слой ✅
+✅ .mockery.yaml расширен: добавлены ClientService, BusinessService,
+   BonusSettingsService, TransactionService
+✅ helpers_test.go: newHandler factory, testLogger, domain builders,
+   errorResponse/messageResponse, makeTransactions
+✅ handleError_test.go: 11 кейсов через реальные endpoints,
+   TestHandleError_500DoesNotLeakInternalDetails
+✅ client_test.go: Create (success, validation 400, 409), GetByID, GetByPhone
+✅ business_test.go: Create (success, validation, 409, 500),
+   GetByID, UpdateBonusBalance (success, validation, 404)
+✅ bonus_settings_test.go: Upsert (success, deactivate, validation, 404),
+   GetByBusinessID
+✅ transaction_test.go: Create (success, with description, validation 400, 422 x3),
+   GetByID, GetByClientID pagination + t.Parallel(), Cancel (success, 409, 404)
+✅ middleware/logger_test.go: X-Request-ID валидный UUID
+✅ middleware/recovery_test.go: panic → 500, сервис не падает
+✅ go test ./internal/handler/... -race → PASS, coverage 90.2%
+✅ go test ./internal/middleware/... -race → PASS, coverage 95.5%
+
 ---
 
 ## API Endpoints — все рабочие
@@ -346,16 +371,8 @@ GET    /metrics                       — Prometheus метрики
 ✅ Фаза 4 — Handler + chi + middleware + Postman
 ✅ Фаза 5.1 — Repository тесты (testcontainers)
 ✅ Фаза 5.2 — Service тесты (mockery, 96.3% coverage)
-
-⬜ Фаза 5.3 — Handler тесты (httptest) ← СЕЙЧАС
-   [ ] Добавить Service интерфейсы в .mockery.yaml
-   [ ] mockery — сгенерировать моки сервисов
-   [ ] helpers_test.go (newHandler, TestHandleError_MapsCorrectHTTPCodes)
-   [ ] client_test.go
-   [ ] business_test.go
-   [ ] bonus_settings_test.go
-   [ ] transaction_test.go
-   [ ] go test ./internal/handler/... -race -cover → цель 80%+
+✅ Фаза 5.3 — Handler тесты (httptest) coverage 90.2%
+✅ Фаза 5.4 — dto пакет (refactor: response structs вынесены из handler)
 
 ⬜ Фаза 6 — Auth
    [ ] POST /api/v1/auth/register
@@ -512,6 +529,8 @@ HTTP Response
 — makeTransactions(n): make([]T, 0, n) + append — не make([]T, n)
 — AssertNotCalled через незарегистрированный EXPECT
 — 500 не раскрывает текст внутренней ошибки клиенту
+— dto.XxxResponse в handler тестах — не дублировать structs из handler пакета
+— mock.MatchedBy для *string параметров — не сравнивать указатели напрямую
 ```
 
 ---
