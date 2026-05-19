@@ -10,3 +10,7 @@ packages:
       BusinessRepository:
       BonusSettingsRepository:
       TransactionRepository:
+      ClientService:
+      BusinessService:
+      BonusSettingsService:
+      TransactionService:
